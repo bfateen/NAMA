@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # The N.A.M.A. Toolbox for AWS
 
 If you're a startup founder in the early stages of validating your idea or if you are exploring Amazon Web Services (AWS) for the first time, you are in the right place!
@@ -16,3 +17,6 @@ For each prototype, the relevant frontend/backend code will be provided as well 
 
 [logo]: https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "The Waiting List prototype"
 
+=======
+# NAMA
+>>>>>>> 0e6c7b968387f78fbcb45c5f5faa2ca4b4fb1d46
