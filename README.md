@@ -14,5 +14,4 @@ We will deploy these prototypes quickly and easily using only services that are 
 
 For each prototype, the relevant frontend/backend code will be provided as well as CloudFront scripts that will automate the creation of resources on AWS. Important: any resources created on your AWS account may potentially exceed your 'Free Tier' subscription so please set up and monitor your billing alerts.
 
-[logo]: https://github.com/bfateen/NAMA/blob/main/resources/waitinglist.png?raw=true "The Waiting List prototype"
-
+<img width="529" alt="waitinglist" src="https://github.com/user-attachments/assets/41e5b159-443c-476b-8f16-bda50688cb33">
