@@ -66,3 +66,10 @@ The goal of this prototype is to test the technical feasibility of the core feat
 - S3
 - Lambda
 - Bedrock
+
+** Optional services to be combined: **
+
+- DynamoDB
+- API Gateway
+- Simple Notification Service (SNS)
+- Cognito
