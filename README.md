@@ -23,6 +23,9 @@ This prototype is referenced in 'No-code for Non-techies' episode here:
 
 [![MVP Lab ep3](https://img.youtube.com/vi/UqzTAyB0gFk/0.jpg)](https://www.youtube.com/watch?v=UqzTAyB0gFk)
 
+AWS Services utilized:
+
+- Lightsail
 
 ## The Waiting List prototype
 
@@ -43,8 +46,23 @@ The goal of this prototype is to simuate functionality manually first, to test t
 
 <img width="859" alt="wizardoz-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/cadc9181-0e34-4d97-b820-7746d5b749f6">
 
+AWS Services utilized:
+
+- S3
+- Lambda
+- DynamoDB
+- API Gateway
+- Simple Notification Service (SNS)
+- Cognito
+  
 ## The Frankenstein prototype
 
 The goal of this prototype is to test the technical feasibility of the core feature of the MVP first using a Microservice function, before building out the rest of the MVP.
 
 <img width="861" alt="frankenstein-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/2069f7c2-c6c6-4088-8d14-1c254f61ed45">
+
+AWS Services utilized:
+
+- S3
+- Lambda
+- Bedrock
