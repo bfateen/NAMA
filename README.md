@@ -15,7 +15,8 @@ The N.A.M.A. Toolbox assets contained here were created to accompany the content
 
 Frontend code is developed using plain HTML, JavaScript and CSS. Backend code is developed using either NodeJS or Python, depending on the prototype.
 
-Important: any resources created on your AWS account may potentially exceed your 'Free Tier' subscription, so don't forget to set up and monitor your billing alerts.
+> [!IMPORTANT]
+>Any resources created on your AWS account by the CloudFormation scripts may potentially exceed your 'Free Tier' subscription, so don't forget to set up and monitor your billing alerts.
 
 ## No-code Landing Page
 
