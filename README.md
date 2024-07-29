@@ -6,11 +6,23 @@ N.A.M.A. stands for No-code + AI + Microservices + APIs.
 
 Included are resources to quickly build the the following prototypes using CloudFormation templates, frontend code and backend Lambda function code:
 
-1. The Waiting List prototype
-2. The Wizard of Oz prototype
-3. The Frankenstein prototype
+1. No-code Landing Page
+2. The Waiting List prototype
+3. The Wizard of Oz prototype
+4. The Frankenstein prototype
+
+The N.A.M.A. Toolbox assets contained here were created to accompany the content series [MVP Lab on YouTube by Basil Fateen](https://www.youtube.com/@MVPLab-AWS).
 
 Important: any resources created on your AWS account may potentially exceed your 'Free Tier' subscription, so don't forget to set up and monitor your billing alerts.
+
+## No-code Landing Page
+
+The goal of this prototype is to create a simple startup landing page with NO-CODE using Wordpress on Lightsail and Airtable to collect user information by embedding a form.
+
+This prototype is referenced in 'No-code for Non-techies' episode here:
+
+[![MVP Lab ep3](https://img.youtube.com/vi/UqzTAyB0gFk/0.jpg)](https://www.youtube.com/watch?v=UqzTAyB0gFk)
+
 
 ## The Waiting List prototype
 
