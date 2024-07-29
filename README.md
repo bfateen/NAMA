@@ -35,7 +35,7 @@ The goal of this prototype is to create a basic landing page to collect private 
 
 ### AWS Services utilized: ###
 
-- S3
+- Simple Storage Service (S3)
 - Lambda
 - DynamoDB
 - API Gateway
@@ -48,7 +48,7 @@ The goal of this prototype is to simuate functionality manually first, to test t
 
 ### AWS Services utilized: ###
 
-- S3
+- Simple Storage Service (S3)
 - Lambda
 - DynamoDB
 - API Gateway
@@ -63,13 +63,13 @@ The goal of this prototype is to test the technical feasibility of the core feat
 
 ### AWS Services utilized: ###
 
-- S3
+- Simple Storage Service (S3)
 - Lambda
 - Bedrock
 
 ** Optional services to be combined: **
 
-- DynamoDB
+- Relational Database Service (RDS)
 - API Gateway
 - Simple Notification Service (SNS)
 - Cognito
