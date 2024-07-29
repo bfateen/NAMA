@@ -10,6 +10,7 @@ After the stack is created:
 
 2. Retrive your wordpress password by opening your Lightsail console (https://lightsail.aws.amazon.com/ls/webapp/home/instances), selecting the new instance and following the instructions from the 'Retrieve default password' section executing commands on CloudShell similar to this:
 
+```
 cat <<'EOT' >~/lightsail_connect
 
 set -eu -o pipefail
@@ -44,3 +45,7 @@ EOT
 chmod +x ~/lightsail_connect
 AWS_REGION=us-east-1 ~/lightsail_connect MyWordPresssite 
 cat bitnami_application_password
+```
+
+<img width="832" alt="Screenshot 2024-07-29 at 4 07 53 PM" src="https://github.com/user-attachments/assets/e4b16b8f-66bb-40fe-b69b-a6058277287d">
+
