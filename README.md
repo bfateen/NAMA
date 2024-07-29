@@ -66,7 +66,7 @@ In the included sample, our startup analyzes and transforms documents. The user 
 
 The goal of this prototype is to test the technical feasibility of the core feature of the MVP first using a Microservice function, before building out the rest of the MVP.
 
-In the included sample, we are now using Generative AI (Claude via Bedrock) to analyze the text of a resume for a specific job an return the relevancy score and analysis to the user in seconds.
+In the included sample, we are now using Generative AI (Claude via Bedrock) to analyze the text of a resume for a specific job and return the relevancy score and analysis to the user in seconds.
 
 <img width="861" alt="frankenstein-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/2069f7c2-c6c6-4088-8d14-1c254f61ed45">
 
