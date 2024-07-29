@@ -1,0 +1,273 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'NAMA Toolbox - Wizard of Oz Application Infrastructure'
+
+Parameters:
+  NotificationEmail:
+    Type: String
+    Description: Email address to receive file upload notifications
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-uploads'
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
+            AllowedOrigins: ['*']
+            MaxAge: 3000
+
+  SNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      TopicName: !Sub '${AWS::StackName}-notifications'
+
+  SNSSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Properties:
+      TopicArn: !Ref SNSTopic
+      Protocol: email
+      Endpoint: !Ref NotificationEmail
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: S3AndSNSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                Resource: !Sub '${S3Bucket.Arn}/*'
+              - Effect: Allow
+                Action: 'sns:Publish'
+                Resource: !Ref SNSTopic
+
+  LambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-handler'
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs20.x
+      Code:
+        ZipFile: |
+          const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+          const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
+
+          const s3Client = new S3Client();
+          const snsClient = new SNSClient();
+
+          function parseMultipartFormData(body, boundary) {
+            console.log('Parsing multipart form data...');
+            console.log('Boundary:', boundary);
+            const parts = body.split(boundary);
+            const result = {};
+            for (const part of parts) {
+              const contentDispositionMatch = part.match(/Content-Disposition:\s*form-data;\s*name="([^"]+)"(?:;\s*filename="([^"]+)")?/i);
+              if (contentDispositionMatch) {
+                const name = contentDispositionMatch[1];
+                const filename = contentDispositionMatch[2];
+                const contentTypeMatch = part.match(/Content-Type:\s*(.+)/i);
+                const contentType = contentTypeMatch ? contentTypeMatch[1].trim() : null;
+                const content = part.split(/\r\n\r\n|\n\n/).slice(1).join('\n\n').trim();
+                result[name] = { content, contentType, filename };
+                console.log(`Parsed part: ${name}`);
+                console.log(`Content Type: ${contentType}`);
+                console.log(`Filename: ${filename}`);
+                console.log(`Content length: ${content.length}`);
+              }
+            }
+            return result;
+          }
+
+          exports.handler = async (event) => {
+            console.log('Received event:', JSON.stringify(event, null, 2));
+            
+            try {
+              const contentType = event.headers['content-type'] || event.headers['Content-Type'];
+              if (!contentType) {
+                throw new Error('Content-Type header is missing');
+              }
+              console.log('Content-Type:', contentType);
+
+              const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+              if (!boundaryMatch) {
+                throw new Error('Boundary not found in Content-Type header');
+              }
+              const boundary = boundaryMatch[1] || boundaryMatch[2];
+              console.log('Boundary:', boundary);
+              
+              let parsedBody;
+              if (event.isBase64Encoded) {
+                console.log('Event body is base64 encoded. Decoding...');
+                const decodedBody = Buffer.from(event.body, 'base64').toString('utf-8');
+                parsedBody = parseMultipartFormData(decodedBody, boundary);
+              } else {
+                console.log('Event body is not base64 encoded.');
+                parsedBody = parseMultipartFormData(event.body, boundary);
+              }
+              
+              console.log('Parsed body:', JSON.stringify(parsedBody, null, 2));
+              
+              const { email, file } = parsedBody;
+              
+              if (!email || !file) {
+                throw new Error('Missing required fields in request body');
+              }
+
+              if (!file.filename) {
+                throw new Error('Filename not found in file data');
+              }
+
+              const bucketName = process.env.S3_BUCKET_NAME;
+              const topicArn = process.env.SNS_TOPIC_ARN;
+
+              console.log('Bucket Name:', bucketName);
+              console.log('SNS Topic ARN:', topicArn);
+
+              const fileContent = Buffer.from(file.content, 'binary');
+              const fileName = file.filename;
+              console.log('Filename:', fileName);
+
+              const params = {
+                Bucket: bucketName,
+                Key: `uploads/${Date.now()}-${fileName}`,
+                Body: fileContent,
+                ContentType: file.contentType,
+              };
+
+              console.log('Uploading to S3...');
+              const uploadCommand = new PutObjectCommand(params);
+              const uploadResult = await s3Client.send(uploadCommand);
+              console.log('S3 upload result:', uploadResult);
+              
+              const fileLocation = `https://${bucketName}.s3.amazonaws.com/${params.Key}`;
+              
+              console.log('Publishing to SNS...');
+              const publishCommand = new PublishCommand({
+                TopicArn: topicArn,
+                Subject: 'New File Upload',
+                Message: `A new file has been uploaded.\nUploader's email: ${email.content}\nFile location: ${fileLocation}`,
+              });
+              await snsClient.send(publishCommand);
+              console.log('SNS publish complete');
+
+              return {
+                statusCode: 200,
+                headers: {
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Credentials': true,
+                },
+                body: JSON.stringify({ message: 'File uploaded successfully' }),
+              };
+            } catch (error) {
+              console.error('Error:', error);
+              return {
+                statusCode: 500,
+                headers: {
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Credentials': true,
+                },
+                body: JSON.stringify({ message: 'Error uploading file', error: error.message, stack: error.stack }),
+              };
+            }
+          };
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref S3Bucket
+          SNS_TOPIC_ARN: !Ref SNSTopic
+
+  ApiGateway:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: !Sub '${AWS::StackName}-api'
+
+  ApiGatewayResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: 'upload'
+
+  ApiGatewayMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations'
+
+  ApiGatewayCORSMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'OPTIONS,POST'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+          ResponseModels:
+            application/json: 'Empty'
+      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref ApiGateway
+
+  ApiGatewayDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn: 
+      - ApiGatewayMethod
+      - ApiGatewayCORSMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: 'prod'
+
+  LambdaApiGatewayPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref LambdaFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/upload'
+
+Outputs:
+  ApiGatewayEndpoint:
+    Description: 'API Gateway endpoint URL for prod stage'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/upload'
+  S3BucketName:
+    Description: 'Name of the S3 bucket'
+    Value: !Ref S3Bucket
+  SNSTopicArn:
+    Description: 'ARN of the SNS topic'
+    Value: !Ref SNSTopic

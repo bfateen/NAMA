@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'NAMA Toolbox - Frankenstein Application Infrastructure'
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: Name of the S3 bucket to store the website files
+
+Resources:
+  ResumeCheckerBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      
+  ResumeCheckerBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ResumeCheckerBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref ResumeCheckerBucket, '/*']]
+
+  ResumeCheckerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ResumeCheckerFunction
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.8
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+
+          def lambda_handler(event, context):
+              try:
+                  body = json.loads(event['body'])
+                  resume_text = body['resume_text']
+              except (KeyError, json.JSONDecodeError):
+                  return {
+                      'statusCode': 400,
+                      'body': json.dumps('Invalid request: resume_text not found in POST body')
+                  }
+
+              client = boto3.client("bedrock-runtime")
+              
+              prompt = f"\n\nHuman:You are an experienced technical recruiter in a software company. Review the following resume text and assign a percent relevancy score for the role of 'Android Developer' and explain why or why not they are qualified. The resume text: {resume_text}\n\nAssistant:"
+
+              body = {
+                  "prompt": prompt,
+                  "max_tokens_to_sample": 200,
+                  "temperature": 0.5,
+                  "stop_sequences": ["\n\nHuman:"],
+              }
+              
+              try:
+                  resp = client.invoke_model(modelId="anthropic.claude-instant-v1", body=json.dumps(body))
+                  response_body = json.loads(resp["body"].read())
+                  completion = response_body["completion"]
+                  
+                  return {
+                      'statusCode': 200,
+                      'headers': {
+                          'Access-Control-Allow-Origin': '*',
+                          'Access-Control-Allow-Headers': 'Content-Type',
+                          'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                      },
+                      'body': json.dumps({'response': completion})
+                  }
+              except Exception as e:
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps(f'Error: {str(e)}')
+                  }
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: '*'
+
+  ResumeCheckerApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: ResumeCheckerAPI
+      Description: API for Resume Checker application
+
+  ResumeCheckerResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ResumeCheckerApi
+      ParentId: !GetAtt ResumeCheckerApi.RootResourceId
+      PathPart: 'check'
+
+  ResumeCheckerMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ResumeCheckerApi
+      ResourceId: !Ref ResumeCheckerResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
+          - LambdaArn: !GetAtt ResumeCheckerFunction.Arn
+
+  ResumeCheckerApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ResumeCheckerMethod
+    Properties:
+      RestApiId: !Ref ResumeCheckerApi
+      StageName: prod
+
+  ResumeCheckerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ResumeCheckerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ResumeCheckerApi}/*/POST/check
+
+  ResumeCheckerDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          ViewerProtocolPolicy: redirect-to-https
+          TargetOriginId: ResumeCheckerS3Origin
+          DefaultTTL: 0
+          MinTTL: 0
+          MaxTTL: 0
+          ForwardedValues:
+            QueryString: false
+        Enabled: true
+        HttpVersion: http2
+        Origins:
+          - DomainName: !Select [2, !Split ["/", !GetAtt ResumeCheckerBucket.WebsiteURL]]
+            Id: ResumeCheckerS3Origin
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt ResumeCheckerBucket.WebsiteURL
+    Description: URL for website hosted on S3
+  CloudFrontURL:
+    Value: !Sub 'https://${ResumeCheckerDistribution.DomainName}'
+    Description: URL for CloudFront distribution
+  APIGatewayURL:
+    Value: !Sub 'https://${ResumeCheckerApi}.execute-api.${AWS::Region}.amazonaws.com/prod/check'
+    Description: URL for API Gateway endpoint

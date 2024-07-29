@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template to create an AWS Cognito User Pool with Hosted UI and Domain'
+
+Parameters:
+  CognitoDomainPrefix:
+    Type: String
+    Description: Prefix for the Cognito domain (must be unique across AWS)
+
+Resources:
+  MyCognitoUserPool:
+    Type: 'AWS::Cognito::UserPool'
+    Properties:
+      UserPoolName: MyUserPool2
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes:
+        - email
+      EmailVerificationMessage: 'Your verification code is {####}'
+      EmailVerificationSubject: 'Verify your email for our app'
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Required: true
+      UsernameAttributes:
+        - email
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+
+  MyCognitoUserPoolClient:
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      ClientName: MyUserPoolClient
+      GenerateSecret: false
+      UserPoolId: !Ref MyCognitoUserPool
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - http://localhost/  # Replace with your actual callback URL
+      LogoutURLs:
+        - http://localhost/  # Replace with your actual logout URL
+
+  MyCognitoDomain:
+    Type: 'AWS::Cognito::UserPoolDomain'
+    Properties:
+      Domain: !Ref CognitoDomainPrefix
+      UserPoolId: !Ref MyCognitoUserPool
+
+Outputs:
+  UserPoolId:
+    Value: !Ref MyCognitoUserPool
+    Description: ID of the Cognito User Pool
+
+  UserPoolClientId:
+    Value: !Ref MyCognitoUserPoolClient
+    Description: ID of the Cognito User Pool Client
+
+  CognitoDomain:
+    Value: !Sub '${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com'
+    Description: Cognito User Pool Domain
+
+  HostedUIURL:
+    Value: !Sub 'https://${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${MyCognitoUserPoolClient}&response_type=code&scope=email+openid+profile&redirect_uri=http://localhost/'
+    Description: Hosted UI URL for the Cognito User Pool (replace redirect_uri with your actual redirect URI)

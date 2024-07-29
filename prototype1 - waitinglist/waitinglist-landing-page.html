@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Match - Find Your Perfect Pet Companion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 0 20px;
+        }
+        header {
+            background: #50b3a2;
+            color: white;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #e8491d 3px solid;
+        }
+        header a {
+            color: #ffffff;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+        header h1 {
+            margin: 0;
+            text-align: center;
+        }
+        .showcase {
+            min-height: 400px;
+            background: url('https://images.pexels.com/photos/3628100/pexels-photo-3628100.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2') no-repeat center center/cover;
+            text-align: center;
+            color: #ffffff;
+        }
+        .showcase h1 {
+            margin-top: 100px;
+            font-size: 55px;
+            margin-bottom: 10px;
+        }
+        .showcase p {
+            font-size: 20px;
+        }
+        #signup {
+            padding: 40px;
+            background: #ffffff;
+            margin-top: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #signup h2 {
+            text-align: center;
+        }
+        #signupForm {
+            display: flex;
+            flex-direction: column;
+        }
+        #signupForm input {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        #signupForm button {
+            background: #50b3a2;
+            color: #ffffff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #signupForm button:hover {
+            background: #3a8a7a;
+        }
+        #message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Pet Match</h1>
+        </div>
+    </header>
+
+    <section class="showcase">
+        <div class="container">
+            <h1>Find Your Perfect Pet Companion</h1>
+            <p>Sign up for our beta and be the first to experience the future of pet adoption!</p>
+        </div>
+    </section>
+
+    <section id="signup">
+        <div class="container">
+            <h2>Sign Up for Beta Access</h2>
+            <form id="signupForm">
+                <input type="text" id="name" placeholder="Your Name" required>
+                <input type="email" id="email" placeholder="Your Email" required>
+                <button type="submit">Join the Waitlist</button>
+            </form>
+            <div id="message"></div>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const userId = Date.now(); // Generate a unique ID based on timestamp
+
+            const data = {
+                user_id: userId,
+                user_email: email,
+                user_name: name
+            };
+
+            console.log('Sending request with data:', data);
+
+            // Replace this URL with your actual API Gateway URL
+            fetch('https://YOUR_API_GATEWAY_URL_HERE/prod/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', JSON.stringify([...response.headers]));
+                return response.text();
+            })
+            .then(text => {
+                console.log('Response text:', text);
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Error parsing JSON:', e);
+                }
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = 'Thank you for signing up! We\'ll be in touch soon.';
+                messageDiv.className = 'success';
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = 'Oops! Something went wrong. Please try again later.';
+                messageDiv.className = 'error';
+            });
+
+            // Clear the form
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+        });
+    </script>
+</body>
+</html>

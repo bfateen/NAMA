@@ -1,0 +1,150 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation template to create a Lightsail instance with WordPress, use static IP, and retrieve initial credentials'
+
+Resources:
+  MyWordPressInstance:
+    Type: AWS::Lightsail::Instance
+    Properties:
+      InstanceName: MyWordPresssite
+      AvailabilityZone: us-east-1a
+      BlueprintId: wordpress
+      BundleId: nano_2_0
+      
+  MyStaticIp:
+    Type: AWS::Lightsail::StaticIp
+    Properties:
+      StaticIpName: MyWordPressSiteIP
+      AttachedTo: !Ref MyWordPressInstance
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LightsailAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lightsail:GetInstance
+                  - lightsail:GetInstancePortStates
+                  - lightsail:GetStaticIp
+                  - lightsail:GetInstanceAccessDetails
+                Resource: '*'
+        - PolicyName: CloudWatchLogsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+
+  WordPressInfoRetrieverFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import time
+          import logging
+          import json
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          def handler(event, context):
+              logger.info('Received event: %s', json.dumps(event))
+              if event['RequestType'] == 'Create':
+                  try:
+                      client = boto3.client('lightsail')
+                      instance_name = event['ResourceProperties']['InstanceName']
+                      static_ip_name = event['ResourceProperties']['StaticIpName']
+                      
+                      # Wait for the instance to be in a 'Running' state
+                      max_retries = 20
+                      for i in range(max_retries):
+                          instance = client.get_instance(instanceName=instance_name)
+                          state = instance['instance']['state']['name']
+                          logger.info(f'Instance state: {state}')
+                          if state == 'running':
+                              break
+                          if i == max_retries - 1:
+                              raise Exception(f'Instance did not reach running state after {max_retries} attempts')
+                          time.sleep(30)
+                      
+                      # Wait for WordPress to be fully set up
+                      max_port_retries = 10
+                      for i in range(max_port_retries):
+                          port_info = client.get_instance_port_states(instanceName=instance_name)
+                          logger.info(f'Port states: {json.dumps(port_info, default=str)}')
+                          if any(port['fromPort'] == 80 and port['state'] == 'open' for port in port_info['portStates']):
+                              break
+                          if i == max_port_retries - 1:
+                              raise Exception('WordPress setup did not complete after multiple attempts')
+                          time.sleep(30)
+                      
+                      # Get static IP
+                      static_ip_info = client.get_static_ip(staticIpName=static_ip_name)
+                      static_ip = static_ip_info['staticIp']['ipAddress']
+                      
+                      # Get instance access details
+                      access_details = client.get_instance_access_details(instanceName=instance_name, protocol='ssh')
+                      logger.info(f'Access details: {json.dumps(access_details, default=str)}')
+                      
+                      username = access_details['accessDetails'].get('username', 'user')
+                      password = access_details['accessDetails'].get('password', 'Password not available')
+                      
+                      if password == 'Password not available':
+                          logger.warning('Password not found in access details. Trying alternative method.')
+                          instance_info = client.get_instance(instanceName=instance_name)
+                          password = instance_info['instance'].get('userData', 'Password not available')
+                      
+                      admin_url = f'http://{static_ip}/wp-admin/'
+                      logger.info(f'WordPress admin URL: {admin_url}')
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                          'AdminURL': admin_url,
+                          'Username': username,
+                          'Password': password
+                      })
+                      
+                  except Exception as e:
+                      logger.error('Error: %s', str(e), exc_info=True)
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+              else:
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+      Runtime: python3.8
+      Timeout: 900
+
+  WordPressInfoRetriever:
+    Type: Custom::WordPressInfoRetriever
+    Properties:
+      ServiceToken: !GetAtt WordPressInfoRetrieverFunction.Arn
+      InstanceName: !Ref MyWordPressInstance
+      StaticIpName: !Ref MyStaticIp
+
+Outputs:
+  WordPressAdminURL:
+    Description: WordPress Admin URL
+    Value: !GetAtt WordPressInfoRetriever.AdminURL
+  WordPressUsername:
+    Description: WordPress Admin Username
+    Value: !GetAtt WordPressInfoRetriever.Username
+  WordPressPassword:
+    Description: WordPress Admin Password
+    Value: !GetAtt WordPressInfoRetriever.Password
+  WordPressInstructions:
+    Description: Instructions to access WordPress
+    Value: "Use the provided Admin URL, Username, and Password to access your WordPress admin panel. If the password is not available, you may need to reset it using the WordPress password reset feature. It's recommended to change your password after first login."
