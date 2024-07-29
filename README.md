@@ -1,17 +1,38 @@
 # The N.A.M.A. Toolbox for AWS
 
-If you're a startup founder in the early stages of validating your idea or if you are exploring Amazon Web Services (AWS) for the first time, you are in the right place!
+The N.A.M.A. Toolbox will help you get started on AWS and validate your startup idea quickly, no matter what technical background you have.
 
-The N.A.M.A. Toolbox will help you get started on AWS, no matter what background you have.
+N.A.M.A. stands for No-code + AI + Microservices + APIs.
 
-Included are the full templates, CloudFront scripts and code samples to help you build the most essential prototypes to validate your startup idea and become familiar with AWS:
+Included are resources to quickly build the the following prototypes using CloudFormation templates, frontend code and backend Lambda function code:
 
-1. The Waiting List prototype (aka Landing Page prototype)
+1. The Waiting List prototype
 2. The Wizard of Oz prototype
 3. The Frankenstein prototype
 
-We will deploy these prototypes quickly and easily using only services that are relevant to N.A.M.A. (No-code, AI (specifically Generative AI), Microservices and APIs).
+Important: any resources created on your AWS account may potentially exceed your 'Free Tier' subscription, so don't forget to set up and monitor your billing alerts.
 
-For each prototype, the relevant frontend/backend code will be provided as well as CloudFront scripts that will automate the creation of resources on AWS. Important: any resources created on your AWS account may potentially exceed your 'Free Tier' subscription so please set up and monitor your billing alerts.
+## The Waiting List prototype
 
-<img width="529" alt="waitinglist" src="https://github.com/user-attachments/assets/41e5b159-443c-476b-8f16-bda50688cb33">
+The goal of this prototype is to create a basic landing page to collect private beta signups, to test demand in the market before building the MVP.
+
+<img width="873" alt="waitinglist-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/b077bbb8-e765-4681-8933-5ed4bff34388">
+
+AWS Services utilized:
+
+- S3
+- Lambda
+- DynamoDB
+- API Gateway
+
+## The Wizard of Oz prototype
+
+The goal of this prototype is to simuate functionality manually first, to test the potential user experience before automating the functionality using code for the MVP.
+
+<img width="859" alt="wizardoz-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/cadc9181-0e34-4d97-b820-7746d5b749f6">
+
+## The Frankenstein prototype
+
+The goal of this prototype is to test the technical feasibility of the core feature of the MVP first using a Microservice function, before building out the rest of the MVP.
+
+<img width="861" alt="frankenstein-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/2069f7c2-c6c6-4088-8d14-1c254f61ed45">
