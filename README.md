@@ -1,6 +1,6 @@
 # The N.A.M.A. Toolbox for AWS
 
-The N.A.M.A. Toolbox will help you get started on AWS and validate your startup idea quickly, no matter what technical background you have.
+The N.A.M.A. Toolbox will help you get started on Amazon Web Services (AWS) and validate your startup idea quickly with easy to use templates.
 
 N.A.M.A. stands for No-code + AI + Microservices + APIs.
 
