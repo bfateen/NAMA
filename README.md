@@ -34,6 +34,8 @@ This prototype is referenced in 'No-code for Non-techies' episode here:
 
 The goal of this prototype is to create a basic landing page to collect private beta signups, to test demand in the market before building the MVP.
 
+In the included sample, our startup is a pet matching service looking for early testers to sign up.
+
 <img width="873" alt="waitinglist-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/b077bbb8-e765-4681-8933-5ed4bff34388">
 
 ### AWS Services utilized: ###
@@ -46,6 +48,8 @@ The goal of this prototype is to create a basic landing page to collect private 
 ## The Wizard of Oz prototype
 
 The goal of this prototype is to simuate functionality manually first, to test the potential user experience before automating the functionality using code for the MVP.
+
+In the included sample, our startup analyzes and transforms documents. The user uploads a document, it is placed into a bucket and the administrator recieves a notification about the location of the uploaded file and the email of the user. Now they can simulate the action (reviewing a resume for example) and manually send back the information to the user.
 
 <img width="859" alt="wizardoz-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/cadc9181-0e34-4d97-b820-7746d5b749f6">
 
@@ -61,6 +65,8 @@ The goal of this prototype is to simuate functionality manually first, to test t
 ## The Frankenstein prototype
 
 The goal of this prototype is to test the technical feasibility of the core feature of the MVP first using a Microservice function, before building out the rest of the MVP.
+
+In the included sample, we are now using Generative AI (Claude via Bedrock) to analyze the text of a resume for a specific job an return the relevancy score and analysis to the user in seconds.
 
 <img width="861" alt="frankenstein-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/2069f7c2-c6c6-4088-8d14-1c254f61ed45">
 
