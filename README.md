@@ -23,7 +23,7 @@ This prototype is referenced in 'No-code for Non-techies' episode here:
 
 [![MVP Lab ep3](https://img.youtube.com/vi/UqzTAyB0gFk/0.jpg)](https://www.youtube.com/watch?v=UqzTAyB0gFk)
 
-AWS Services utilized:
+###AWS Services utilized:###
 
 - Lightsail
 
@@ -33,7 +33,7 @@ The goal of this prototype is to create a basic landing page to collect private 
 
 <img width="873" alt="waitinglist-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/b077bbb8-e765-4681-8933-5ed4bff34388">
 
-AWS Services utilized:
+###AWS Services utilized:###
 
 - S3
 - Lambda
@@ -46,7 +46,7 @@ The goal of this prototype is to simuate functionality manually first, to test t
 
 <img width="859" alt="wizardoz-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/cadc9181-0e34-4d97-b820-7746d5b749f6">
 
-AWS Services utilized:
+###AWS Services utilized:###
 
 - S3
 - Lambda
@@ -61,7 +61,7 @@ The goal of this prototype is to test the technical feasibility of the core feat
 
 <img width="861" alt="frankenstein-prototype-architecture-diagram" src="https://github.com/user-attachments/assets/2069f7c2-c6c6-4088-8d14-1c254f61ed45">
 
-AWS Services utilized:
+###AWS Services utilized:###
 
 - S3
 - Lambda
