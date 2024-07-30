@@ -89,7 +89,9 @@ The components of each prototype are contained within their respective folders.
 
 In each folder you will find a CloudFormation template (yaml file) and README file that explains how to use it.
 
-The CloudFormation script will generate all the assets, services, identities and permissions on AWS to start using each prototype right away.
+The CloudFormation script will generate all the assets, services, identities and permissions on AWS to start using each prototype right away. 
+
+Alternatively, you can use the seperate frontend and backend code provided in your own architecture.
 
 Some scripts will require you to enter parameters as input and others will require you to use results from the 'Output' tab after the script is generated.
 
