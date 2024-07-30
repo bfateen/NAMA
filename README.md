@@ -82,3 +82,18 @@ In the included sample, we are now using Generative AI (Claude via Bedrock) to a
 - API Gateway
 - Simple Notification Service (SNS)
 - Cognito
+
+## Usage
+
+The components of each prototype are contained within their respective folders.
+
+In each folder you will find a CloudFormation template (yaml file) and README file that explains how to use it.
+
+The CloudFormation script will generate all the assets, services, identities and permissions on AWS to start using each prototype right away.
+
+Some scripts will require you to enter parameters as input and others will require you to use results from the 'Output' tab after the script is generated.
+
+<img width="1096" alt="params Screenshot 2024-07-29 at 1 58 35 AM" src="https://github.com/user-attachments/assets/f02bdb6e-bbc3-46d0-b2bd-b1818c2c6916">
+
+<img width="826" alt="Screenshot 2024-07-29 at 4 05 31 PM" src="https://github.com/user-attachments/assets/197be8fc-b4ba-41f1-a0a6-de5fad0b7789">
+
