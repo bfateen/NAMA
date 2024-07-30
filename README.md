@@ -93,7 +93,6 @@ The CloudFormation script will generate all the assets, services, identities and
 
 Some scripts will require you to enter parameters as input and others will require you to use results from the 'Output' tab after the script is generated.
 
-<img width="1096" alt="params Screenshot 2024-07-29 at 1 58 35 AM" src="https://github.com/user-attachments/assets/f02bdb6e-bbc3-46d0-b2bd-b1818c2c6916">
+<img width="1096" alt="params Screenshot 2024-07-29 at 1 58 35 AM" src="https://github.com/user-attachments/assets/08b5aeeb-8cc8-4ec2-b897-85adf8a975cf">
 
-<img width="826" alt="Screenshot 2024-07-29 at 4 05 31 PM" src="https://github.com/user-attachments/assets/197be8fc-b4ba-41f1-a0a6-de5fad0b7789">
-
+<img width="832" alt="Screenshot 2024-07-29 at 4 07 53 PM" src="https://github.com/user-attachments/assets/43967066-8cb0-47ba-a529-9e2e2e7c6244">
